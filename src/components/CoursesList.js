@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function CoursesList(props) {
   return (
@@ -10,6 +11,7 @@ function CoursesList(props) {
           <th>Title</th>
           <th>Author Id</th>
           <th>Category</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -21,15 +23,31 @@ function CoursesList(props) {
               </td>
               <td>{item.authorId}</td>
               <td>{item.category}</td>
+              <td>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => deleteCourseItem(item.id)}
+                >
+                  Delete
+                </button>{" "}
+              </td>
             </tr>
           );
         })}
       </tbody>
     </table>
   );
+
+  function deleteCourseItem(id) {
+    props.deleteCourse(id).then(() => {
+      toast.success("Course deleted.");
+    });
+  }
 }
+
 //Below is the validation prop
 CoursesList.propTypes = {
+  deleteCourse: PropTypes.func.isRequired,
   //Below is valiadtion on each object or array , should have mentioned property and type
   courses: PropTypes.arrayOf(
     PropTypes.shape({

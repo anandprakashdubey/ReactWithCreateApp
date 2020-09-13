@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import CourseForm from "./CourseForm";
-import * as courseApi from "../api/courseApi";
 import { toast } from "react-toastify";
+
+import courseStore from "../stores/courseStore";
+import * as courseActions from "../actions/courseAction";
 
 // import { Prompt } from "react-router-dom";
 const ManageCoursePage = (props) => {
   const [errors, setErrors] = useState({});
+  const [courses, setCourses] = useState(courseStore.getCourses());
   const [course, setCourse] = useState({
     id: null,
     slug: "",
@@ -15,13 +18,22 @@ const ManageCoursePage = (props) => {
   });
 
   useEffect(() => {
+    courseStore.addChangeListener(onChange);
     let slugValue = props.match.params.slug; // This we can because we declare routing like manageCourse/:slug
-    if (slugValue) {
-      courseApi.getCourseBySlug(slugValue).then((item) => {
-        setCourse(item);
-      });
+
+    //If user loaded the page directly and courses are not loaded then we should load from flux
+
+    if (courses.length === 0) {
+      courseActions.loadCourses();
+    } else if (slugValue) {
+      setCourse(courseStore.getCourseBySlug(slugValue));
     }
-  }, [props.match.params.slug]);
+    return () => courseStore.removeChangeListener(onChange); // cleanup on unmount
+  }, [courses.length, props.match.params.slug]);
+
+  function onChange() {
+    setCourses(courseStore.getCourses());
+  }
 
   function handleChange(event) {
     //const updatedCourseObject = { ...course, title: event.target.value };
@@ -37,7 +49,7 @@ const ManageCoursePage = (props) => {
   function handleSubmit(event) {
     event.preventDefault();
     if (!formIsValid()) return;
-    courseApi.saveCourse(course).then(() => {
+    courseActions.saveCourse(course).then(() => {
       props.history.push("/courses");
       toast.success("Course saved.");
     });
